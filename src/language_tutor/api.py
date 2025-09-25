@@ -1,9 +1,11 @@
 import os
 import shutil
 import uuid
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi.responses import FileResponse
 from fastapi.concurrency import run_in_threadpool
 from .main import run_team_conversation_and_get_text_response
+from .tools.language_tools import text_to_speech
 
 app = FastAPI(
     title="Language Tutor Agent Service",
@@ -51,3 +53,24 @@ Listen to what I say and respond naturally in the same language.
         if os.path.exists(input_path):
             os.remove(input_path)
             print(f"Cleaned up temporary input file: {input_path}")
+
+@app.post("/synthesize-speech/")
+async def synthesize_speech(
+    text_input: dict,
+    background_tasks: BackgroundTasks
+):
+    """
+    Endpoint para convertir texto a voz.
+    Recibe un JSON con texto y devuelve un archivo de audio.
+    """
+    text = text_input.get("text")
+    if not text:
+        raise HTTPException(status_code=400, detail="No text provided for synthesis.")
+
+    output_path = text_to_speech(text)
+
+    if output_path and os.path.exists(output_path):
+        background_tasks.add_task(os.remove, output_path)
+        return FileResponse(path=output_path, media_type="audio/mpeg", filename=os.path.basename(output_path), background=background_tasks)
+    else:
+        raise HTTPException(status_code=500, detail="Failed to generate speech file.")

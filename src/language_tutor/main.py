@@ -93,10 +93,15 @@ def run_team_conversation_and_get_text_response(team_name: str, user_request: st
     print(f"--- Starting conversation with team: {team_name} ---")
     user_proxy.initiate_chat(manager, message=user_request)
 
-    # 6. Extraer la respuesta final de texto del Conversation_Partner
-    for msg in reversed(groupchat.messages):
-        if msg.get("name") == "Conversation_Partner":
-            # Limpiamos la palabra TERMINATE si existe
-            return msg.get("content", "").replace("TERMINATE", "").strip()
+    # 6. Extraer la respuesta final de texto del último agente que habló (que no sea el User_Proxy)
+    final_message = None
+    # Buscamos hacia atrás el último mensaje que no sea del proxy
+    for msg in reversed(groupchat.messages[1:]): # Omitimos el mensaje inicial del proxy
+        if msg.get("name") != "User_Proxy":
+            final_message = msg.get("content", "").replace("TERMINATE", "").strip()
+            break
+
+    if final_message:
+        return final_message
     
     return None

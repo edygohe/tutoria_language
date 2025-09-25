@@ -60,7 +60,8 @@ def text_to_speech(text: str) -> str:
         response = client.audio.speech.create(
             model="tts-1",
             voice="alloy", 
-            input=text
+            input=text,
+            speed=0.9  # Reducimos la velocidad a 90% para una dicción más clara.
         )
         
         # Guardar la respuesta de audio directamente en un archivo

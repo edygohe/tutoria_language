@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 # Lee la configuración desde el objeto centralizado
 TELEGRAM_TOKEN = settings.TELEGRAM_TOKEN
 AGENT_API_URL = "http://127.0.0.1:8000/process-audio/"
+TTS_API_URL = "http://127.0.0.1:8000/synthesize-speech/"
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -42,9 +43,22 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         response = requests.post(AGENT_API_URL, files=files)
 
         if response.status_code == 200:
+            # 1. Obtener y enviar la respuesta de texto
             text_response = response.json().get("response", "No se recibió una respuesta de texto válida.")
             logger.info(f"Respuesta de texto recibida de la API: '{text_response}'")
             await update.message.reply_text(text_response)
+
+            # 2. Llamar al nuevo endpoint para generar el audio
+            logger.info(f"Solicitando síntesis de voz a {TTS_API_URL}...")
+            tts_response = requests.post(TTS_API_URL, json={"text": text_response})
+
+            if tts_response.status_code == 200:
+                # 3. Enviar la respuesta de audio
+                logger.info("Respuesta de audio recibida. Enviando al usuario...")
+                await update.message.reply_voice(voice=tts_response.content)
+            else:
+                logger.error(f"Error en la API de TTS: {tts_response.status_code} - {tts_response.text}")
+                await update.message.reply_text("(No se pudo generar el audio de la respuesta).")
         else:
             logger.error(f"Error de la API: {response.status_code} - {response.text}")
             await update.message.reply_text(f"Lo siento, ocurrió un error al enviar tu audio. (Error: {response.status_code})")
