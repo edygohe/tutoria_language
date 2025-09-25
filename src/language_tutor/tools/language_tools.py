@@ -59,7 +59,16 @@ def text_to_speech(text: str) -> str:
         # 'alloy' es una de las voces disponibles. Puedes probar otras como 'nova', 'echo', etc.
         
         # Pre-procesar el texto para mejorar las pausas
-        processed_text = text.replace('. ', '. ... ').replace(', ', ', ... ')
+        processed_text = text.replace('\n\n', '... ').replace(': ', ': ... ')
+
+        # Forzar la pronunciación de números en inglés reemplazando dígitos por palabras.
+        # Esto evita que el motor de TTS se confunda con el texto bilingüe.
+        number_map = {
+            "49": "forty-nine",
+            # Puedes añadir más números aquí si es necesario
+        }
+        for digit, word in number_map.items():
+            processed_text = processed_text.replace(digit, word)
         
         response = client.audio.speech.create(
             model="tts-1-hd", # Usamos el modelo de alta definición para mayor calidad.

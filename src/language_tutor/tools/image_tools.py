@@ -36,16 +36,17 @@ def text_to_image(text: str, output_path: str) -> str | None:
         font_bold = ImageFont.load_default()
 
     # 1. Parsear el texto del agente
-    original_sent = re.search(r'Original: "(.*?)"', text)
-    corrected_sent = re.search(r'Corregido: "(.*?)"', text)
-    feedback_line = re.search(r'Feedback: (.*)', text)
-    tip_line = re.search(r'Tip: (.*)', text, re.DOTALL)
+    original_sent = re.search(r'Original:\s*"(.*?)"', text, re.DOTALL)
+    corrected_sent = re.search(r'Corregido:\s*"(.*?)"', text, re.DOTALL)
+    feedback_line = re.search(r'Feedback:\s*(.*)', text)
+    tip_line = re.search(r'Tip:\s*(.*)', text, re.DOTALL)
 
-    if not corrected_sent:
-        return None # No se puede generar la imagen sin la frase corregida
+    # La sección 'Corregido' es ahora opcional.
+    # Si no hay errores, no existirá.
+    has_correction = corrected_sent is not None
 
     original_sent_text = original_sent.group(1) if original_sent else ""
-    corrected_sent_text = corrected_sent.group(1)
+    corrected_sent_text = corrected_sent.group(1) if has_correction else ""
     feedback_text = feedback_line.group(1) if feedback_line else ""
     tip_text = tip_line.group(1) if tip_line else ""
 
@@ -61,30 +62,33 @@ def text_to_image(text: str, output_path: str) -> str | None:
     top_draw.text((feedback_x_pos, (top_box_height - font_regular.getbbox(feedback_text)[3]) / 2), feedback_text, font=font_regular, fill=PERCENTAGE_TEXT_COLOR)
 
     # --- Dibujar la caja inferior (Corrección) ---
-    # Encontrar las diferencias entre la frase original y la corregida
-    diff = ndiff(original_sent_text.split(), corrected_sent_text.split())
-    
     words_to_draw = []
-    for item in diff:
-        code = item[0]
-        word = item[2:]
-        if code == ' ': # La palabra es correcta y está en ambas
-            words_to_draw.append({'text': word, 'type': 'correct'})
-        elif code == '-': # La palabra fue eliminada (incorrecta)
-            words_to_draw.append({'text': word, 'type': 'incorrect'})
-        elif code == '+': # La palabra fue añadida (parte de la corrección)
-            # No la dibujamos como una palabra separada, es parte de la frase final
-            pass
+    if has_correction:
+        # Encontrar las diferencias entre la frase original y la corregida
+        diff = ndiff(original_sent_text.split(), corrected_sent_text.split())
+        for item in diff:
+            code = item[0]
+            word = item[2:]
+            if code == ' ': # La palabra es correcta y está en ambas
+                words_to_draw.append({'text': word, 'type': 'correct'})
+            elif code == '-': # La palabra fue eliminada (incorrecta)
+                words_to_draw.append({'text': word, 'type': 'incorrect'})
+            elif code == '+': # La palabra fue añadida (parte de la corrección)
+                # No la dibujamos como una palabra separada, es parte de la frase final
+                pass
+    else:
+        # Si no hay corrección, todas las palabras son correctas.
+        words_to_draw = [{'text': word, 'type': 'correct'} for word in original_sent_text.split()]
 
     # Calcular el alto necesario para la caja inferior
     # Usamos un ancho de caracteres aproximado para el text wrapper
     wrap_width = 45 
     original_lines = textwrap.wrap(original_sent_text, width=wrap_width)
-    corrected_lines = textwrap.wrap(corrected_sent_text, width=wrap_width)
+    corrected_lines = textwrap.wrap(corrected_sent_text, width=wrap_width) if has_correction else []
     tip_lines = textwrap.wrap(tip_text, width=wrap_width)
 
     line_height = font_regular.getbbox("A")[3] + 15
-    bottom_box_height = (len(original_lines) + len(corrected_lines) + len(tip_lines) + 4) * line_height + 2 * PADDING # +4 para etiquetas y espacio final
+    bottom_box_height = (len(original_lines) + len(corrected_lines) + len(tip_lines) + 5) * line_height + 2 * PADDING # +5 para etiquetas y espacios
     
     bottom_img = Image.new('RGBA', (WIDTH, bottom_box_height), (0, 0, 0, 0))
     bottom_draw = ImageDraw.Draw(bottom_img)
@@ -126,16 +130,17 @@ def text_to_image(text: str, output_path: str) -> str | None:
     y += PADDING // 2
 
     # --- Sección Frase Corregida ---
-    bottom_draw.text((PADDING, y), "Corregido:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
-    y += line_height
-    for line in corrected_lines:
-        bottom_draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
+    if has_correction:
+        bottom_draw.text((PADDING, y), "Corregido:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
         y += line_height
+        for line in corrected_lines:
+            bottom_draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
+            y += line_height
 
-    # Avanzar a la siguiente sección
-    y += PADDING // 2
-    bottom_draw.line([(PADDING, y), (WIDTH - PADDING, y)], fill="#D8DEE9", width=1)
-    y += PADDING // 2
+        # Avanzar a la siguiente sección
+        y += PADDING // 2
+        bottom_draw.line([(PADDING, y), (WIDTH - PADDING, y)], fill="#D8DEE9", width=1)
+        y += PADDING // 2
 
     # --- Sección Consejo ---
     tip_start_y = y
@@ -144,7 +149,8 @@ def text_to_image(text: str, output_path: str) -> str | None:
     tip_section_height = (len(tip_lines) + 1) * line_height # +1 para la etiqueta "Consejo:"
     
     # Dibujar el fondo verde tenue para la sección del consejo
-    bottom_draw.rectangle([(0, tip_start_y - 10), (WIDTH, tip_start_y + tip_section_height + 10)], fill=TIP_BG_COLOR)
+    # Se dibuja primero el fondo, luego el texto encima.
+    bottom_draw.rectangle([(0, tip_start_y - 15), (WIDTH, tip_start_y + tip_section_height)], fill=TIP_BG_COLOR)
 
     # Ahora dibujamos el texto encima del fondo
     bottom_draw.text((PADDING, y), "Tip:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
@@ -154,7 +160,8 @@ def text_to_image(text: str, output_path: str) -> str | None:
         y += line_height
 
     # --- Combinar ambas cajas en una imagen final ---
-    total_height = top_box_height + BOX_SPACING + y + PADDING # Añadimos el padding inferior
+    # Usamos la altura precalculada de la caja inferior que ya incluye todos los espacios.
+    total_height = top_box_height + BOX_SPACING + bottom_box_height
     final_img = Image.new('RGBA', (WIDTH, total_height), (0, 0, 0, 0))
     final_img.paste(top_img, (0, 0))
     final_img.paste(bottom_img, (0, top_box_height + BOX_SPACING))
