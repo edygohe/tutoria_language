@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "language_tutor"
+version = "0.1.0"
+dependencies = [
+    "autogen",
+    "python-dotenv",
+    "google-generativeai",
+    "openai",
+    "pydantic-settings",
+    "gtts",                    # Síntesis de texto a voz (Text-to-Speech)
+    "playsound==1.2.2",        # Reproducir el audio generado (estable en Windows)
+    "fastapi",                 # Framework para crear la API REST
+    "uvicorn[standard]",       # Servidor ASGI para ejecutar FastAPI
+    "python-multipart",        # Para parsear datos de formularios (subida de archivos)
+    "python-telegram-bot"      # Para crear el cliente de Telegram
+]
+
+[tool.setuptools]
+packages = ["language_tutor"]
+package-dir = {"" = "src"}
+
+[project.scripts]
+tutor = "language_tutor.main:main"

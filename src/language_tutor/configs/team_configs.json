@@ -1,0 +1,49 @@
+{
+    "audio_transcription_team": {
+        "description": "A team to transcribe audio to text.",
+        "agent_roles": [
+            "Audio_Transcriber"
+        ]
+    },
+    "full_conversation_team": {
+        "description": "A full team for an audio conversation: transcribe, translate, respond, and synthesize the response.",
+        "agent_roles": [
+            "Audio_Transcriber",
+            "Translator",
+            "Conversation_Partner",
+            "Speech_Synthesizer"
+        ]
+    },
+    "translation_and_response_team": {
+        "description": "A team to transcribe, translate, and formulate a text response.",
+        "agent_roles": [
+            "Audio_Transcriber",
+            "Translator",
+            "Conversation_Partner"
+        ]
+    },
+    "direct_conversation_team": {
+        "description": "A team for a direct conversation: transcribe and respond in the same language.",
+        "agent_roles": [
+            "Audio_Transcriber",
+            "Conversation_Partner"
+        ]
+    },
+    "grammar_check_conversation_team": {
+        "description": "A team for a conversation with grammar checking: transcribe, correct grammar, and then respond.",
+        "agent_roles": [
+            "Audio_Transcriber",
+            "Grammar_Corrector",
+            "Conversation_Partner"
+        ]
+    },
+    "full_grammar_conversation_team": {
+        "description": "A full conversation with grammar check and voice response.",
+        "agent_roles": [
+            "Audio_Transcriber",
+            "Grammar_Corrector",
+            "Conversation_Partner",
+            "Speech_Synthesizer"
+        ]
+    }
+}

@@ -1,0 +1,26 @@
+# Entorno virtual de Python
+.venv/
+venv/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Archivo de secretos y configuración local
+.env
+
+# Artefactos de distribución y construcción
+build/
+dist/
+*.egg-info/
+
+# Directorio de trabajo de AutoGen
+coding/
+
+# Archivos temporales de audio (subidas y respuestas)
+data/.uploads/
+*.mp3
+
+# Configuraciones de IDEs
+.vscode/
+.idea/
