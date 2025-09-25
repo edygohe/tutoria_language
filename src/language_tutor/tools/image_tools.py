@@ -39,7 +39,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
     original_sent = re.search(r'Original: "(.*?)"', text)
     corrected_sent = re.search(r'Corregido: "(.*?)"', text)
     feedback_line = re.search(r'Feedback: (.*)', text)
-    tip_text_match = re.search(r'¡Buen intento!.*', text, re.DOTALL)
+    tip_line = re.search(r'Tip: (.*)', text, re.DOTALL)
 
     if not corrected_sent:
         return None # No se puede generar la imagen sin la frase corregida
@@ -47,7 +47,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
     original_sent_text = original_sent.group(1) if original_sent else ""
     corrected_sent_text = corrected_sent.group(1)
     feedback_text = feedback_line.group(1) if feedback_line else ""
-    tip_text = tip_text_match.group(0) if tip_text_match else ""
+    tip_text = tip_line.group(1) if tip_line else ""
 
     # --- Dibujar la caja superior (Feedback) ---
     top_box_height = 80
@@ -147,7 +147,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
     bottom_draw.rectangle([(0, tip_start_y - 10), (WIDTH, tip_start_y + tip_section_height + 10)], fill=TIP_BG_COLOR)
 
     # Ahora dibujamos el texto encima del fondo
-    bottom_draw.text((PADDING, y), "Consejo:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
+    bottom_draw.text((PADDING, y), "Tip:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
     y += line_height
     for line in tip_lines:
         bottom_draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
