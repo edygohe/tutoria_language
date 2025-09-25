@@ -57,11 +57,15 @@ def text_to_speech(text: str) -> str:
         
         # Elige un modelo y una voz. 'tts-1' es el modelo estándar.
         # 'alloy' es una de las voces disponibles. Puedes probar otras como 'nova', 'echo', etc.
+        
+        # Pre-procesar el texto para mejorar las pausas
+        processed_text = text.replace('. ', '. ... ').replace(', ', ', ... ')
+        
         response = client.audio.speech.create(
-            model="tts-1",
+            model="tts-1-hd", # Usamos el modelo de alta definición para mayor calidad.
             voice="alloy", 
-            input=text,
-            speed=0.9  # Reducimos la velocidad a 90% para una dicción más clara.
+            input=processed_text,
+            speed=0.80  # Reducimos la velocidad a 80% para una dicción muy clara y pausada.
         )
         
         # Guardar la respuesta de audio directamente en un archivo

@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from fastapi.concurrency import run_in_threadpool
 from .main import run_team_conversation_and_get_text_response
 from .tools.language_tools import text_to_speech
+from .tools.image_tools import text_to_image
 
 app = FastAPI(
     title="Language Tutor Agent Service",
@@ -74,3 +75,27 @@ async def synthesize_speech(
         return FileResponse(path=output_path, media_type="audio/mpeg", filename=os.path.basename(output_path), background=background_tasks)
     else:
         raise HTTPException(status_code=500, detail="Failed to generate speech file.")
+
+@app.post("/generate-image-from-text/")
+async def generate_image(
+    text_input: dict,
+    background_tasks: BackgroundTasks
+):
+    """
+    Endpoint para convertir texto a una imagen estilizada.
+    """
+    text = text_input.get("text")
+    if not text:
+        raise HTTPException(status_code=400, detail="No text provided for image generation.")
+
+    # Definir una ruta de salida temporal para la imagen
+    output_filename = f"feedback_{uuid.uuid4()}.png"
+    output_path = os.path.join(UPLOADS_DIR, output_filename)
+
+    # Generar la imagen
+    generated_path = text_to_image(text, output_path)
+    if generated_path and os.path.exists(generated_path):
+        background_tasks.add_task(os.remove, generated_path)
+        return FileResponse(path=generated_path, media_type="image/png", filename=os.path.basename(generated_path), background=background_tasks)
+    else:
+        raise HTTPException(status_code=500, detail="Failed to generate image from text.")

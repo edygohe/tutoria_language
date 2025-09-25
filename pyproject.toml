@@ -16,7 +16,8 @@ dependencies = [
     "fastapi",                 # Framework para crear la API REST
     "uvicorn[standard]",       # Servidor ASGI para ejecutar FastAPI
     "python-multipart",        # Para parsear datos de formularios (subida de archivos)
-    "python-telegram-bot"      # Para crear el cliente de Telegram
+    "python-telegram-bot",     # Para crear el cliente de Telegram
+    "Pillow"                   # Para la manipulación y creación de imágenes
 ]
 
 [tool.setuptools]

@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 # Lee la configuración desde el objeto centralizado
 TELEGRAM_TOKEN = settings.TELEGRAM_TOKEN
 AGENT_API_URL = "http://127.0.0.1:8000/process-audio/"
+IMAGE_API_URL = "http://127.0.0.1:8000/generate-image-from-text/"
 TTS_API_URL = "http://127.0.0.1:8000/synthesize-speech/"
 
 
@@ -43,17 +44,25 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         response = requests.post(AGENT_API_URL, files=files)
 
         if response.status_code == 200:
-            # 1. Obtener y enviar la respuesta de texto
+            # 1. Obtener la respuesta de texto de los agentes
             text_response = response.json().get("response", "No se recibió una respuesta de texto válida.")
             logger.info(f"Respuesta de texto recibida de la API: '{text_response}'")
-            await update.message.reply_text(text_response)
 
-            # 2. Llamar al nuevo endpoint para generar el audio
+            # 2. Llamar al endpoint de imagen para generar la imagen de feedback
+            logger.info(f"Solicitando generación de imagen a {IMAGE_API_URL}...")
+            image_response = requests.post(IMAGE_API_URL, json={"text": text_response})
+            if image_response.status_code == 200:
+                await update.message.reply_photo(photo=image_response.content)
+            else:
+                logger.error(f"Error en la API de imagen: {image_response.status_code} - {image_response.text}")
+                await update.message.reply_text(text_response) # Si falla la imagen, enviamos el texto.
+
+            # 3. Llamar al endpoint para generar el audio
             logger.info(f"Solicitando síntesis de voz a {TTS_API_URL}...")
             tts_response = requests.post(TTS_API_URL, json={"text": text_response})
 
             if tts_response.status_code == 200:
-                # 3. Enviar la respuesta de audio
+                # 4. Enviar la respuesta de audio
                 logger.info("Respuesta de audio recibida. Enviando al usuario...")
                 await update.message.reply_voice(voice=tts_response.content)
             else:
