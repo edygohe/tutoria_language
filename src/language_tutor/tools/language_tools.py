@@ -59,10 +59,14 @@ def text_to_speech(text: str) -> str:
         # 'alloy' es una de las voces disponibles. Puedes probar otras como 'nova', 'echo', etc.
         
         # Pre-procesar el texto para mejorar las pausas
-        # Añadimos "Feedback" al principio para que coincida con la imagen.
-        processed_text = "Feedback. ... " + text
-        processed_text = processed_text.replace('\n\n', '... ')
-        processed_text = processed_text.replace('Original:', 'Frase Original:')
+        # Si el texto es un feedback completo, añadimos la cabecera "Feedback".
+        # Si es solo una respuesta, lo dejamos como está.
+        if "Original:" in text:
+            processed_text = "Feedback. ... " + text
+            processed_text = processed_text.replace('\n\n', '... ')
+            processed_text = processed_text.replace('Original:', 'Frase Original:')
+        else:
+            processed_text = text
         processed_text = processed_text.replace('Respuesta:', '... Respuesta:')
 
         # Forzar la pronunciación de números en inglés reemplazando dígitos por palabras.

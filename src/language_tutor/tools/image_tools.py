@@ -59,7 +59,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
         response_text = (response_line.group(1) if response_line else "").replace('\\n', '\n')
         response_lines = textwrap.wrap(response_text, width=45)
         
-        line_height = font_bold.getbbox("A")[3] + 15
+        line_height = font_regular.getbbox("A")[3] + 15
         # Altura para las líneas de la respuesta + padding superior e inferior.
         total_height = (len(response_lines) * line_height) + (2 * PADDING)
         
@@ -67,14 +67,14 @@ def text_to_image(text: str, output_path: str) -> str | None:
         draw = ImageDraw.Draw(final_img)
         
         # Centrar el bloque de texto verticalmente
-        text_block_height = (len(response_lines) * line_height) - (line_height - font_bold.getbbox("A")[3])
+        text_block_height = (len(response_lines) * line_height) - (line_height - font_regular.getbbox("A")[3])
         y = (total_height - text_block_height) / 2
         
         for line in response_lines:
-            draw.text((PADDING, y), line, font=font_bold, fill=CORRECTED_TEXT_COLOR)
+            draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
             y += line_height
         
-        final_img.convert('RGB').save(output_path)
+        final_img.convert('RGB').save(output_path) # Guardamos en RGB para evitar problemas de formato
         return output_path
 
     original_sent_text = original_sent.group(1) if original_sent else ""
