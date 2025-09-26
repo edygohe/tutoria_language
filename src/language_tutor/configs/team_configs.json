@@ -60,5 +60,14 @@
             "Grammar_Corrector",
             "Feedback_Generator"
         ]
+    },
+    "feedback_and_conversation_team": {
+        "description": "A team that provides structured feedback and then continues the conversation.",
+        "agent_roles": [
+            "Audio_Transcriber",
+            "Grammar_Corrector",
+            "Feedback_Generator",
+            "Conversation_Partner"
+        ]
     }
 }

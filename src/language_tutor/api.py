@@ -19,7 +19,7 @@ os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 @app.post("/process-audio/")
 async def process_audio_to_text(
-    team_name: str = Form("detailed_feedback_team"), # Usamos el nuevo equipo con lógica separada
+    team_name: str = Form("feedback_and_conversation_team"), # Usamos el equipo que da feedback y continúa la conversación
     file: UploadFile = File(...)
 ):
     """
