@@ -64,18 +64,18 @@ def text_to_image(text: str, output_path: str) -> str | None:
     corrected_words = corrected_sent_text.split()
     total_words = len(original_words)
     
-    are_identical = original_sent_text.strip().lower() == corrected_sent_text.strip().lower()
+    # Comparamos ignorando mayúsculas/minúsculas y espacios extra
+    are_identical = original_sent_text.strip().lower() == corrected_sent_text.strip().lower() or not has_correction
 
     if are_identical:
         feedback_text = "¡Perfecto! Tu frase es 100% correcta."
         has_correction = False # Esto evitará que se dibuje la sección "Corregido"
     else:
+        # Calculamos el porcentaje solo si hay errores
         diff = ndiff(original_words, corrected_words)
         correct_words = len([item for item in diff if item.startswith(' ')])
-        percentage = (correct_words / total_words) * 100
-        if "[XX]%" in feedback_text:
-            feedback_text = feedback_text.replace("[XX]%", f"{percentage:.0f}%")
-
+        percentage = (correct_words / total_words) * 100 if total_words > 0 else 0
+        feedback_text = f"Has acertado en un {percentage:.0f}%"
 
     # --- Dibujar la caja superior (Feedback) ---
     top_box_height = 80
