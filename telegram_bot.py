@@ -1,5 +1,6 @@
 import httpx
 import logging
+import io
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
@@ -40,10 +41,10 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     try:
         # Descarga el archivo de voz de Telegram
         voice_file = await voice.get_file()
-        voice_data = await voice_file.download_as_bytearray()
+        voice_bytearray = await voice_file.download_as_bytearray()
 
         # Prepara los datos para enviar a la API (multipart/form-data)
-        files = {'file': ('voice_message.ogg', voice_data, 'audio/ogg')}
+        files = {'file': ('voice_message.ogg', io.BytesIO(voice_bytearray), 'audio/ogg')}
         
         # Usamos un cliente asíncrono para no bloquear el bot
         async with httpx.AsyncClient(timeout=120.0) as client:
