@@ -2,6 +2,7 @@ pyautogen==0.2.20
 openai
 fastapi
 uvicorn[standard]
+pydantic-settings
 python-dotenv
 Pillow
 python-telegram-bot
