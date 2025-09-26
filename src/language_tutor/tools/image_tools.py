@@ -59,22 +59,35 @@ def text_to_image(text: str, output_path: str) -> str | None:
         response_text = (response_line.group(1) if response_line else "").replace('\\n', '\n')
         response_lines = textwrap.wrap(response_text, width=45)
         
+        # --- Dibujar la caja superior (Título "Respuesta") ---
+        top_box_height = 80
+        top_img = Image.new('RGBA', (WIDTH, top_box_height), (0, 0, 0, 0))
+        top_draw = ImageDraw.Draw(top_img)
+        top_draw.rounded_rectangle(((0, 0), (WIDTH, top_box_height)), radius=CORNER_RADIUS, fill=TOP_BOX_BG)
+        
+        feedback_label = "Respuesta"
+        label_width = top_draw.textlength(feedback_label, font=font_bold)
+        top_draw.text(((WIDTH - label_width) / 2, (top_box_height - font_bold.getbbox(feedback_label)[3]) / 2), feedback_label, font=font_bold, fill=FEEDBACK_TEXT_COLOR)
+
+        # --- Dibujar la caja inferior (Contenido de la respuesta) ---
         line_height = font_regular.getbbox("A")[3] + 15
-        # Altura para las líneas de la respuesta + padding superior e inferior.
-        total_height = (len(response_lines) * line_height) + (2 * PADDING)
+        bottom_box_height = (len(response_lines) * line_height) + (2 * PADDING)
+        bottom_img = Image.new('RGBA', (WIDTH, bottom_box_height), (0, 0, 0, 0))
+        bottom_draw = ImageDraw.Draw(bottom_img)
+        bottom_draw.rounded_rectangle(((0, 0), (WIDTH, bottom_box_height)), radius=CORNER_RADIUS, fill=BOTTOM_BOX_BG)
         
-        final_img = Image.new('RGBA', (WIDTH, total_height), RESPONSE_ONLY_BG_COLOR)
-        draw = ImageDraw.Draw(final_img)
-        
-        # Centrar el bloque de texto verticalmente
-        text_block_height = (len(response_lines) * line_height) - (line_height - font_regular.getbbox("A")[3])
-        y = (total_height - text_block_height) / 2
-        
+        y = PADDING
         for line in response_lines:
-            draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
+            bottom_draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
             y += line_height
-        
-        final_img.convert('RGB').save(output_path) # Guardamos en RGB para evitar problemas de formato
+
+        # --- Combinar ambas cajas en una imagen final ---
+        total_height = top_box_height + BOX_SPACING + bottom_box_height
+        final_img = Image.new('RGBA', (WIDTH, total_height), (0, 0, 0, 0))
+        final_img.paste(top_img, (0, 0))
+        final_img.paste(bottom_img, (0, top_box_height + BOX_SPACING))
+
+        final_img.convert('RGB').save(output_path)
         return output_path
 
     original_sent_text = original_sent.group(1) if original_sent else ""
