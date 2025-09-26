@@ -58,19 +58,23 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     await update.message.reply_text("No se pudo generar el feedback.")
                     return
 
-                # Enviar la imagen de feedback
-                image_response = await client.post(IMAGE_API_URL, json={"text": feedback_text})
-                if image_response.status_code == 200:
-                    await update.message.reply_photo(photo=image_response.content)
-                else:
-                    await update.message.reply_text(f"Error al generar imagen: {image_response.text}")
+                # Si hay correcciones (la palabra "Corregido" está en el texto), enviamos el feedback completo.
+                # Si no, nos saltamos esta parte y vamos directo a la conversación.
+                if "Corregido:" in feedback_text:
+                    logger.info("Se encontraron errores, enviando feedback detallado.")
+                    # Enviar la imagen de feedback
+                    image_response = await client.post(IMAGE_API_URL, json={"text": feedback_text})
+                    if image_response.status_code == 200:
+                        await update.message.reply_photo(photo=image_response.content)
+                    else:
+                        await update.message.reply_text(f"Error al generar imagen: {image_response.text}")
 
-                # Enviar el audio del feedback
-                tts_response = await client.post(TTS_API_URL, json={"text": feedback_text})
-                if tts_response.status_code == 200:
-                    await update.message.reply_voice(voice=tts_response.content)
-                else:
-                    await update.message.reply_text(f"Error al generar audio: {tts_response.text}")
+                    # Enviar el audio del feedback
+                    tts_response = await client.post(TTS_API_URL, json={"text": feedback_text})
+                    if tts_response.status_code == 200:
+                        await update.message.reply_voice(voice=tts_response.content)
+                    else:
+                        await update.message.reply_text(f"Error al generar audio: {tts_response.text}")
 
             else:
                 await update.message.reply_text(f"Error al obtener feedback: {feedback_response.text}")
