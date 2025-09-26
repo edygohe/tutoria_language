@@ -60,7 +60,9 @@ def text_to_speech(text: str) -> str:
         
         # Pre-procesar el texto para mejorar las pausas
         # Añadimos "Feedback" al principio para que coincida con la imagen.
-        processed_text = "Feedback. ... " + text.replace('\n\n', '... ').replace(': ', ': ... ')
+        processed_text = "Feedback. ... " + text
+        processed_text = processed_text.replace('\n\n', '... ')
+        processed_text = processed_text.replace('Original:', 'Frase Original:')
 
         # Forzar la pronunciación de números en inglés reemplazando dígitos por palabras.
         # Esto evita que el motor de TTS se confunda con el texto bilingüe.
