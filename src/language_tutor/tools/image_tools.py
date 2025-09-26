@@ -175,3 +175,45 @@ def text_to_image(text: str, output_path: str) -> str | None:
     final_img_rgb = final_img.convert('RGB')
     final_img_rgb.save(output_path)
     return output_path
+
+def text_to_simple_image(text: str, output_path: str) -> str | None:
+    """
+    Genera una imagen simple con un texto, ideal para mostrar la respuesta del bot.
+
+    :param text: El texto a renderizar en la imagen.
+    :param output_path: La ruta donde se guardará la imagen generada.
+    :return: La ruta al archivo de imagen si se generó correctamente, o None.
+    """
+    # --- Configuración de Estilo ---
+    WIDTH = 600
+    PADDING = 30
+    BG_COLOR = "#FFFBEA" # Amarillo muy claro
+    TEXT_COLOR = "#000000"
+
+    try:
+        # Intentar usar fuentes comunes en Linux
+        font_regular = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size=24)
+    except IOError:
+        try:
+            # Si falla, intentar con fuentes de Windows
+            font_regular = ImageFont.truetype("arial.ttf", size=24)
+        except IOError:
+            # Como último recurso, usar la fuente por defecto
+            font_regular = ImageFont.load_default()
+
+    response_lines = textwrap.wrap(text, width=45)
+    
+    line_height = font_regular.getbbox("A")[3] + 15
+    # Altura para las líneas de la respuesta + padding superior e inferior.
+    total_height = (len(response_lines) * line_height) + (2 * PADDING)
+    
+    final_img = Image.new('RGBA', (WIDTH, total_height), BG_COLOR)
+    draw = ImageDraw.Draw(final_img)
+    
+    y = PADDING
+    for line in response_lines:
+        draw.text((PADDING, y), line, font=font_regular, fill=TEXT_COLOR)
+        y += line_height
+    
+    final_img.convert('RGB').save(output_path)
+    return output_path

@@ -23,6 +23,7 @@ TELEGRAM_TOKEN = settings.TELEGRAM_TOKEN
 AGENT_API_URL = "http://127.0.0.1:8000/process-audio/"
 IMAGE_API_URL = "http://127.0.0.1:8000/generate-image-from-text/"
 TTS_API_URL = "http://127.0.0.1:8000/synthesize-speech/"
+SIMPLE_IMAGE_API_URL = "http://127.0.0.1:8000/generate-simple-image/"
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -86,6 +87,13 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 if not conversation_text:
                     logger.warning("No se generó respuesta conversacional.")
                     return
+
+                # Generar y enviar la imagen de la respuesta conversacional
+                simple_image_response = await client.post(SIMPLE_IMAGE_API_URL, json={"text": conversation_text})
+                if simple_image_response.status_code == 200:
+                    await update.message.reply_photo(photo=simple_image_response.content)
+                else:
+                    await update.message.reply_text(f"Error al generar imagen de respuesta: {simple_image_response.text}")
 
                 # Generar y enviar el audio de la respuesta conversacional
                 tts_response_conv = await client.post(TTS_API_URL, json={"text": conversation_text})
