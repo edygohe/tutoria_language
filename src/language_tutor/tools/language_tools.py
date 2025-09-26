@@ -59,7 +59,8 @@ def text_to_speech(text: str) -> str:
         # 'alloy' es una de las voces disponibles. Puedes probar otras como 'nova', 'echo', etc.
         
         # Pre-procesar el texto para mejorar las pausas
-        processed_text = text.replace('\n\n', '... ').replace(': ', ': ... ')
+        # Añadimos "Feedback" al principio para que coincida con la imagen.
+        processed_text = "Feedback. ... " + text.replace('\n\n', '... ').replace(': ', ': ... ')
 
         # Forzar la pronunciación de números en inglés reemplazando dígitos por palabras.
         # Esto evita que el motor de TTS se confunda con el texto bilingüe.
