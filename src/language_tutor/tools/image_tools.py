@@ -54,29 +54,27 @@ def text_to_image(text: str, output_path: str) -> str | None:
     # Si no hay errores, no existirá.
     has_correction = corrected_sent is not None
 
-    # --- Caso especial: Solo hay respuesta (frase 100% correcta) ---
+    # --- Caso especial: Solo hay respuesta (frase 100% correcta), mostramos una tarjeta simple. ---
     if not has_correction and not tip_line and response_line:
         response_text = (response_line.group(1) if response_line else "").replace('\\n', '\n')
         response_lines = textwrap.wrap(response_text, width=45)
         
-        line_height = font_regular.getbbox("A")[3] + 15
-        # Altura para el título "Feedback", la etiqueta "Respuesta" y las líneas de la respuesta.
-        total_height = 80 + (len(response_lines) + 1) * line_height + 2 * PADDING
+        line_height = font_bold.getbbox("A")[3] + 15
+        # Altura para las líneas de la respuesta + padding superior e inferior.
+        total_height = (len(response_lines) * line_height) + (2 * PADDING)
         
         final_img = Image.new('RGBA', (WIDTH, total_height), RESPONSE_ONLY_BG_COLOR)
         draw = ImageDraw.Draw(final_img)
-
-        # Dibujar título "Feedback"
-        draw.text((PADDING, PADDING), "Feedback", font=font_bold, fill=CORRECTED_TEXT_COLOR)
-        # Dibujar etiqueta "Respuesta"
-        draw.text((PADDING, PADDING + 60), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
         
-        y = PADDING + 60 + line_height
+        # Centrar el bloque de texto verticalmente
+        text_block_height = (len(response_lines) * line_height) - (line_height - font_bold.getbbox("A")[3])
+        y = (total_height - text_block_height) / 2
+        
         for line in response_lines:
-            draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
+            draw.text((PADDING, y), line, font=font_bold, fill=CORRECTED_TEXT_COLOR)
             y += line_height
         
-        final_img.save(output_path)
+        final_img.convert('RGB').save(output_path)
         return output_path
 
     original_sent_text = original_sent.group(1) if original_sent else ""
