@@ -3,6 +3,7 @@ import sys
 import os
 
 # Añadimos el directorio 'src' al path de Python para que encuentre el módulo 'language_tutor'
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 if __name__ == "__main__":
