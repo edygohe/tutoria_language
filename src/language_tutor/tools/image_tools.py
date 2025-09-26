@@ -29,11 +29,19 @@ def text_to_image(text: str, output_path: str) -> str | None:
     INCORRECT_WORD_TEXT = "#FFFFFF"
 
     try:
-        font_regular = ImageFont.truetype("arial.ttf", size=24)
-        font_bold = ImageFont.truetype("arialbd.ttf", size=24)
+        # Intentar usar fuentes comunes en Linux (como en la Raspberry Pi)
+        font_regular = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size=24)
+        font_bold = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size=24)
     except IOError:
-        font_regular = ImageFont.load_default()
-        font_bold = ImageFont.load_default()
+        try:
+            # Si falla, intentar con fuentes de Windows
+            font_regular = ImageFont.truetype("arial.ttf", size=24)
+            font_bold = ImageFont.truetype("arialbd.ttf", size=24)
+        except IOError:
+            # Como último recurso, usar la fuente por defecto (sin negritas)
+            print("Warning: Custom fonts not found. Falling back to default font.")
+            font_regular = ImageFont.load_default()
+            font_bold = ImageFont.load_default()
 
     # 1. Parsear el texto del agente
     original_sent = re.search(r'Original:\s*"(.*?)"', text, re.DOTALL)
@@ -48,7 +56,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
     original_sent_text = original_sent.group(1) if original_sent else ""
     corrected_sent_text = corrected_sent.group(1) if has_correction else ""
     feedback_text = feedback_line.group(1) if feedback_line else ""
-    tip_text = tip_line.group(1) if tip_line else ""
+    tip_text = (tip_line.group(1) if tip_line else "").replace('\\n', '\n')
 
     # --- Dibujar la caja superior (Feedback) ---
     top_box_height = 80
