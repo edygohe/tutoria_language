@@ -65,9 +65,13 @@ def text_to_speech(text: str) -> str:
 
         # Forzar la pronunciación de números en inglés usando num2words.
         # Esto evita que el motor de TTS se confunda con el texto bilingüe (ej. "twenty cinco").
-        def replace_numbers(match):
-            return num2words(int(match.group(0)), lang='en')
-        processed_text = re.sub(r'\d+', replace_numbers, processed_text)
+        def replace_numbers_in_quotes(match):
+            # match.group(1) es el contenido dentro de las comillas
+            content = match.group(1)
+            # Reemplazamos los números solo dentro de este contenido
+            content_with_words = re.sub(r'\d+', lambda m: num2words(int(m.group(0)), lang='en'), content)
+            return f'"{content_with_words}"'
+        processed_text = re.sub(r'"(.*?)"', replace_numbers_in_quotes, processed_text, flags=re.DOTALL)
 
         response = client.audio.speech.create(
             model="tts-1-hd", # Usamos el modelo de alta definición para mayor calidad.
