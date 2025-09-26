@@ -1,0 +1,9 @@
+pyautogen
+openai
+fastapi
+uvicorn[standard]
+python-dotenv
+Pillow
+python-telegram-bot
+requests
+python-multipart
