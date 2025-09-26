@@ -21,7 +21,7 @@
     },
     "Speech_Synthesizer": {
         "name": "Speech_Synthesizer",
-        "system_message": "You are a Text-to-Speech synthesizer.Your single task is to take the **immediately preceding message** from the 'Feedback_Generator' and convert it to audio by calling the `text_to_speech` tool. After calling the tool, you MUST end your turn with the word TERMINATE."
+        "system_message": "You are a Text-to-Speech synthesizer. Your single task is to take the **immediately preceding message** from the 'Feedback_Generator' and convert it to audio by calling the `text_to_speech` tool. After calling the tool, you MUST end your turn with the word TERMINATE."
     },
     "Default": {
         "name": "Default_Agent",
