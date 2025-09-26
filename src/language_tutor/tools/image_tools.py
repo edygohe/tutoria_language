@@ -48,6 +48,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
     corrected_sent = re.search(r'Corregido:\s*"(.*?)"', text, re.DOTALL)
     # La línea de feedback ahora es estática, no necesitamos parsearla.
     tip_line = re.search(r'Tip:\s*(.*)', text, re.DOTALL)
+    response_line = re.search(r'Respuesta:\s*(.*)', text, re.DOTALL)
 
     # La sección 'Corregido' es ahora opcional.
     # Si no hay errores, no existirá.
@@ -56,6 +57,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
     original_sent_text = original_sent.group(1) if original_sent else ""
     corrected_sent_text = corrected_sent.group(1) if has_correction else ""
     tip_text = (tip_line.group(1) if tip_line else "").replace('\\n', '\n')
+    response_text = (response_line.group(1) if response_line else "").replace('\\n', '\n')
 
     # --- Dibujar la caja superior (Feedback) ---
     top_box_height = 80
@@ -91,10 +93,11 @@ def text_to_image(text: str, output_path: str) -> str | None:
     wrap_width = 45 
     original_lines = textwrap.wrap(original_sent_text, width=wrap_width)
     corrected_lines = textwrap.wrap(corrected_sent_text, width=wrap_width) if has_correction else []
-    tip_lines = textwrap.wrap(tip_text, width=wrap_width)
+    tip_lines = textwrap.wrap(tip_text, width=wrap_width) if tip_text else []
+    response_lines = textwrap.wrap(response_text, width=wrap_width) if response_text else []
 
     line_height = font_regular.getbbox("A")[3] + 15
-    bottom_box_height = (len(original_lines) + len(corrected_lines) + len(tip_lines) + 5) * line_height + 2 * PADDING # +5 para etiquetas y espacios
+    bottom_box_height = (len(original_lines) + len(corrected_lines) + len(tip_lines) + len(response_lines) + 6) * line_height + 2 * PADDING # +6 para etiquetas y espacios
     
     bottom_img = Image.new('RGBA', (WIDTH, bottom_box_height), (0, 0, 0, 0))
     bottom_draw = ImageDraw.Draw(bottom_img)
@@ -148,22 +151,36 @@ def text_to_image(text: str, output_path: str) -> str | None:
         bottom_draw.line([(PADDING, y), (WIDTH - PADDING, y)], fill="#D8DEE9", width=1)
         y += PADDING // 2
 
-    # --- Sección Consejo ---
-    tip_start_y = y
-    
-    # Calculamos la altura que ocupará el consejo
-    tip_section_height = (len(tip_lines) + 1) * line_height # +1 para la etiqueta "Consejo:"
-    
-    # Dibujar el fondo verde tenue para la sección del consejo
-    # Se dibuja primero el fondo, luego el texto encima.
-    bottom_draw.rectangle([(0, tip_start_y - 15), (WIDTH, tip_start_y + tip_section_height)], fill=TIP_BG_COLOR)
-
-    # Ahora dibujamos el texto encima del fondo
-    bottom_draw.text((PADDING, y), "Tip:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
-    y += line_height
-    for line in tip_lines:
-        bottom_draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
+    # --- Sección Consejo (Tip) ---
+    if tip_lines:
+        tip_start_y = y
+        tip_section_height = (len(tip_lines) + 1) * line_height # +1 para la etiqueta "Tip:"
+        bottom_draw.rectangle([(0, tip_start_y - 15), (WIDTH, tip_start_y + tip_section_height)], fill=TIP_BG_COLOR)
+        bottom_draw.text((PADDING, y), "Tip:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
         y += line_height
+        for line in tip_lines:
+            bottom_draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
+            y += line_height
+        
+        # Avanzar a la siguiente sección
+        y += PADDING // 2
+        bottom_draw.line([(PADDING, y), (WIDTH - PADDING, y)], fill="#D8DEE9", width=1)
+        y += PADDING // 2
+
+    # --- Sección Respuesta ---
+    if response_lines:
+        # Si no hubo corrección, el tip es "¡Sigue así!". En ese caso, la respuesta va en lugar del tip.
+        if not has_correction:
+            y -= PADDING // 2 # Retrocedemos para sobreescribir la línea divisoria
+            y -= PADDING // 2
+            bottom_draw.text((PADDING, y), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
+        else:
+            bottom_draw.text((PADDING, y), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
+
+        y += line_height
+        for line in response_lines:
+            bottom_draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
+            y += line_height
 
     # --- Combinar ambas cajas en una imagen final ---
     # Usamos la altura precalculada de la caja inferior que ya incluye todos los espacios.

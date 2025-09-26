@@ -63,6 +63,7 @@ def text_to_speech(text: str) -> str:
         processed_text = "Feedback. ... " + text
         processed_text = processed_text.replace('\n\n', '... ')
         processed_text = processed_text.replace('Original:', 'Frase Original:')
+        processed_text = processed_text.replace('Respuesta:', '... Respuesta:')
 
         # Forzar la pronunciación de números en inglés reemplazando dígitos por palabras.
         # Esto evita que el motor de TTS se confunda con el texto bilingüe.
