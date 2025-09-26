@@ -25,8 +25,8 @@ def text_to_image(text: str, output_path: str) -> str | None:
     PERCENTAGE_TEXT_COLOR = "#A3BE8C"  # Verde (Nord)
     TIP_BG_COLOR = "#E5F9E0" # Un verde claro y suave
     CORRECTED_TEXT_COLOR = "#000000"
-    INCORRECT_WORD_BG = "#F3DB50"  # Rojo (Nord)
-    INCORRECT_WORD_TEXT = "#000000"
+    INCORRECT_WORD_BG = "#F34A07"  # Rojo (Nord)
+    INCORRECT_WORD_TEXT = "#FFFFFF"
 
     try:
         # Intentar usar fuentes comunes en Linux (como en la Raspberry Pi)
@@ -58,20 +58,21 @@ def text_to_image(text: str, output_path: str) -> str | None:
     feedback_text = feedback_line.group(1) if feedback_line else ""
     tip_text = (tip_line.group(1) if tip_line else "").replace('\\n', '\n')
 
-    # Calculamos el porcentaje de acierto de forma fiable
+    # Comparamos el texto original y el corregido para determinar si son idénticos
+    # y calcular el porcentaje de acierto de forma fiable.
     original_words = original_sent_text.split()
+    corrected_words = corrected_sent_text.split()
     total_words = len(original_words)
-    percentage = 100.0
-    if total_words > 0 and has_correction:
-        diff = ndiff(original_words, corrected_sent_text.split())
-        correct_words = len([item for item in diff if item.startswith(' ')])
-        percentage = (correct_words / total_words) * 100
+    
+    are_identical = original_sent_text.strip().lower() == corrected_sent_text.strip().lower()
 
-    # Si el porcentaje es 100, ajustamos el feedback y eliminamos la corrección.
-    if percentage == 100.0:
+    if are_identical:
         feedback_text = "¡Perfecto! Tu frase es 100% correcta."
         has_correction = False # Esto evitará que se dibuje la sección "Corregido"
     else:
+        diff = ndiff(original_words, corrected_words)
+        correct_words = len([item for item in diff if item.startswith(' ')])
+        percentage = (correct_words / total_words) * 100
         if "[XX]%" in feedback_text:
             feedback_text = feedback_text.replace("[XX]%", f"{percentage:.0f}%")
 

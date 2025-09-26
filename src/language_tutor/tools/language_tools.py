@@ -1,8 +1,6 @@
 import os
 import logging
-import re
 from openai import OpenAI
-from num2words import num2words
 from ..config import settings
 
 # Configura un logger básico
@@ -63,16 +61,15 @@ def text_to_speech(text: str) -> str:
         # Pre-procesar el texto para mejorar las pausas
         processed_text = text.replace('\n\n', '... ').replace(': ', ': ... ')
 
-        # Forzar la pronunciación de números en inglés usando num2words.
-        # Esto evita que el motor de TTS se confunda con el texto bilingüe (ej. "twenty cinco").
-        def replace_numbers_in_quotes(match):
-            # match.group(1) es el contenido dentro de las comillas
-            content = match.group(1)
-            # Reemplazamos los números solo dentro de este contenido
-            content_with_words = re.sub(r'\d+', lambda m: num2words(int(m.group(0)), lang='en'), content)
-            return f'"{content_with_words}"'
-        processed_text = re.sub(r'"(.*?)"', replace_numbers_in_quotes, processed_text, flags=re.DOTALL)
-
+        # Forzar la pronunciación de números en inglés reemplazando dígitos por palabras.
+        # Esto evita que el motor de TTS se confunda con el texto bilingüe.
+        number_map = {
+            "49": "forty-nine",
+            # Puedes añadir más números aquí si es necesario
+        }
+        for digit, word in number_map.items():
+            processed_text = processed_text.replace(digit, word)
+        
         response = client.audio.speech.create(
             model="tts-1-hd", # Usamos el modelo de alta definición para mayor calidad.
             voice="alloy", 
