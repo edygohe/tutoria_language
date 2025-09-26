@@ -210,25 +210,25 @@ def text_to_simple_image(text: str, output_path: str) -> str | None:
     # Usamos un ancho menor para que el bloque de texto sea más angosto y centrado.
     response_lines = textwrap.wrap(text, width=40)
     
-    # Medimos las dimensiones del bloque de texto antes de crear la imagen final.
-    dummy_img = Image.new('RGB', (1, 1))
-    dummy_draw = ImageDraw.Draw(dummy_img)
-    max_line_width = 0
-    if response_lines:
-        max_line_width = max(dummy_draw.textlength(line, font=font_regular) for line in response_lines)
-
     line_height = font_regular.getbbox("A")[3] + 15
-    text_block_height = (len(response_lines) * line_height) - (line_height - font_regular.getbbox("A")[3])
+    # Altura para las líneas de la respuesta + padding superior e inferior.
+    total_height = (len(response_lines) * line_height) + (2 * PADDING)
     
-    # Creamos la imagen final con el tamaño exacto del texto + padding.
-    final_width = int(max_line_width) + (2 * PADDING)
-    final_height = int(text_block_height) + (2 * PADDING)
-    final_img = Image.new('RGB', (final_width, final_height), BG_COLOR)
+    # Usamos un ancho fijo para consistencia visual en Telegram.
+    final_img = Image.new('RGB', (WIDTH, total_height), BG_COLOR)
     draw = ImageDraw.Draw(final_img)
     
-    y = PADDING
+    # Centramos el bloque de texto verticalmente
+    text_block_height = (len(response_lines) * line_height) - (line_height - font_regular.getbbox("A")[3])
+    y = (total_height - text_block_height) / 2
+    
+    max_line_width = 0
+    if response_lines:
+        max_line_width = max(draw.textlength(line, font=font_regular) for line in response_lines)
+    x_start = (WIDTH - max_line_width) / 2
+    
     for line in response_lines:
-        draw.text((PADDING, y), line, font=font_regular, fill=TEXT_COLOR)
+        draw.text((x_start, y), line, font=font_regular, fill=TEXT_COLOR)
         y += line_height
     
     final_img.save(output_path)
