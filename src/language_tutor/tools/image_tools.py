@@ -98,7 +98,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
     temp_height = 2000
     bottom_img = Image.new('RGBA', (WIDTH, temp_height), (0, 0, 0, 0))
     bottom_draw = ImageDraw.Draw(bottom_img)
-    bottom_draw.rounded_rectangle(((0, 0), (WIDTH, bottom_box_height)), radius=CORNER_RADIUS, fill=BOTTOM_BOX_BG)
+    bottom_draw.rounded_rectangle(((0, 0), (WIDTH, temp_height)), radius=CORNER_RADIUS, fill=BOTTOM_BOX_BG)
 
     # Dibujar las palabras en la caja inferior
     x, y = PADDING, PADDING
