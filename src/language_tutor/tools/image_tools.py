@@ -169,11 +169,12 @@ def text_to_image(text: str, output_path: str) -> str | None:
 
     # --- Sección Respuesta ---
     if response_lines:
-        # Si no hubo corrección, el tip es "¡Sigue así!". En ese caso, la respuesta va en lugar del tip.
-        if not has_correction:
+        # Si no hubo corrección ni tip, la respuesta es la sección principal.
+        if not has_correction and not tip_lines:
             y -= PADDING // 2 # Retrocedemos para sobreescribir la línea divisoria
             y -= PADDING // 2
             bottom_draw.text((PADDING, y), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
+        # Si hubo corrección, la respuesta va después del tip.
         else:
             bottom_draw.text((PADDING, y), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
 
