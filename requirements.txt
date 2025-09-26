@@ -9,3 +9,4 @@ python-telegram-bot
 requests
 python-multipart
 httpx
+num2words
