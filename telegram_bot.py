@@ -3,6 +3,7 @@ import logging
 import io
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+import re
 
 import sys
 import os
@@ -58,8 +59,16 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     await update.message.reply_text("No se pudo generar el feedback.")
                     return
 
+                # Extraemos el texto original y el corregido para compararlos en Python
+                original_match = re.search(r'Original:\s*"(.*?)"', feedback_text, re.DOTALL)
+                corrected_match = re.search(r'Corregido:\s*"(.*?)"', feedback_text, re.DOTALL)
+
+                original_text = original_match.group(1).strip() if original_match else ""
+                corrected_text = corrected_match.group(1).strip() if corrected_match else ""
+
                 # --- PASO 2: Decidir el flujo basado en si hay errores ---
-                if "Corregido:" in feedback_text:
+                # La decisión se toma comparando los textos, no buscando la palabra "Corregido:"
+                if original_text.lower() != corrected_text.lower():
                     # --- Flujo con errores: Feedback + Conversación ---
                     logger.info("Se encontraron errores, enviando feedback detallado.")
                     # 2a. Enviar la imagen de feedback
