@@ -57,7 +57,6 @@
         "description": "A team that provides detailed, structured feedback by separating correction from feedback generation.",
         "agent_roles": [
             "Audio_Transcriber",
-            "Grammar_Corrector",
             "Feedback_Generator"
         ]
     }
