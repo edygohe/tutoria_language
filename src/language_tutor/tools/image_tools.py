@@ -30,13 +30,13 @@ def text_to_image(text: str, output_path: str) -> str | None:
 
     try:
         # Intentar usar fuentes comunes en Linux (como en la Raspberry Pi)
-        font_regular = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size=16)
-        font_bold = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size=16)
+        font_regular = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size=15)
+        font_bold = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size=15)
     except IOError:
         try:
             # Si falla, intentar con fuentes de Windows
-            font_regular = ImageFont.truetype("arial.ttf", size=16)
-            font_bold = ImageFont.truetype("arialbd.ttf", size=16)
+            font_regular = ImageFont.truetype("arial.ttf", size=15)
+            font_bold = ImageFont.truetype("arialbd.ttf", size=15)
         except IOError:
             # Como último recurso, usar la fuente por defecto (sin negritas)
             print("Warning: Custom fonts not found. Falling back to default font.")
@@ -198,11 +198,11 @@ def text_to_simple_image(text: str, output_path: str) -> str | None:
 
     try:
         # Intentar usar fuentes comunes en Linux
-        font_regular = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size=16)
+        font_regular = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size=15)
     except IOError:
         try:
             # Si falla, intentar con fuentes de Windows
-            font_regular = ImageFont.truetype("arial.ttf", size=16)
+            font_regular = ImageFont.truetype("arial.ttf", size=15)
         except IOError:
             # Como último recurso, usar la fuente por defecto
             font_regular = ImageFont.load_default()
