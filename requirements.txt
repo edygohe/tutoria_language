@@ -8,3 +8,4 @@ Pillow
 python-telegram-bot
 requests
 python-multipart
+httpx
