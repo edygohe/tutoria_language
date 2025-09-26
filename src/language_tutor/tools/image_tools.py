@@ -216,13 +216,20 @@ def text_to_simple_image(text: str, output_path: str) -> str | None:
     
     final_img = Image.new('RGB', (WIDTH, total_height), BG_COLOR)
     draw = ImageDraw.Draw(final_img)
+
+    # Encontrar la línea más ancha para centrar el bloque de texto
+    max_line_width = 0
+    if response_lines:
+        max_line_width = max(draw.textlength(line, font=font_regular) for line in response_lines)
+    
+    # Calcular la posición X inicial para centrar el bloque
+    x_start = (WIDTH - max_line_width) / 2
     
     # Centramos el bloque de texto verticalmente
     text_block_height = (len(response_lines) * line_height) - (line_height - font_regular.getbbox("A")[3])
     y = (total_height - text_block_height) / 2
     for line in response_lines:
-        # Dibujamos el texto alineado a la izquierda con un padding generoso
-        draw.text((PADDING * 2, y), line, font=font_regular, fill=TEXT_COLOR)
+        draw.text((x_start, y), line, font=font_regular, fill=TEXT_COLOR)
         y += line_height
     
     final_img.save(output_path)
