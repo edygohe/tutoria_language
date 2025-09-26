@@ -48,52 +48,14 @@ def text_to_image(text: str, output_path: str) -> str | None:
     corrected_sent = re.search(r'Corregido:\s*"(.*?)"', text, re.DOTALL)
     # La línea de feedback ahora es estática, no necesitamos parsearla.
     tip_line = re.search(r'Tip:\s*(.*)', text, re.DOTALL)
-    response_line = re.search(r'Respuesta:\s*(.*)', text, re.DOTALL)
 
     # La sección 'Corregido' es ahora opcional.
     # Si no hay errores, no existirá.
     has_correction = corrected_sent is not None
 
-    # --- Caso especial: Solo hay respuesta (frase 100% correcta), mostramos una tarjeta simple. ---
-    if not has_correction and not tip_line and response_line:
-        response_text = (response_line.group(1) if response_line else "").replace('\\n', '\n')
-        response_lines = textwrap.wrap(response_text, width=45)
-        
-        # --- Dibujar la caja superior (Título "Respuesta") ---
-        top_box_height = 80
-        top_img = Image.new('RGBA', (WIDTH, top_box_height), (0, 0, 0, 0))
-        top_draw = ImageDraw.Draw(top_img)
-        top_draw.rounded_rectangle(((0, 0), (WIDTH, top_box_height)), radius=CORNER_RADIUS, fill=TOP_BOX_BG)
-        
-        feedback_label = "Respuesta"
-        label_width = top_draw.textlength(feedback_label, font=font_bold)
-        top_draw.text(((WIDTH - label_width) / 2, (top_box_height - font_bold.getbbox(feedback_label)[3]) / 2), feedback_label, font=font_bold, fill=FEEDBACK_TEXT_COLOR)
-
-        # --- Dibujar la caja inferior (Contenido de la respuesta) ---
-        line_height = font_regular.getbbox("A")[3] + 15
-        bottom_box_height = (len(response_lines) * line_height) + (2 * PADDING)
-        bottom_img = Image.new('RGBA', (WIDTH, bottom_box_height), (0, 0, 0, 0))
-        bottom_draw = ImageDraw.Draw(bottom_img)
-        bottom_draw.rounded_rectangle(((0, 0), (WIDTH, bottom_box_height)), radius=CORNER_RADIUS, fill=BOTTOM_BOX_BG)
-        
-        y = PADDING
-        for line in response_lines:
-            bottom_draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
-            y += line_height
-
-        # --- Combinar ambas cajas en una imagen final ---
-        total_height = top_box_height + BOX_SPACING + bottom_box_height
-        final_img = Image.new('RGBA', (WIDTH, total_height), (0, 0, 0, 0))
-        final_img.paste(top_img, (0, 0))
-        final_img.paste(bottom_img, (0, top_box_height + BOX_SPACING))
-
-        final_img.convert('RGB').save(output_path)
-        return output_path
-
     original_sent_text = original_sent.group(1) if original_sent else ""
     corrected_sent_text = corrected_sent.group(1) if has_correction else ""
     tip_text = (tip_line.group(1) if tip_line else "").replace('\\n', '\n')
-    response_text = (response_line.group(1) if response_line else "").replace('\\n', '\n')
 
     # --- Dibujar la caja superior (Feedback) ---
     top_box_height = 80
@@ -129,11 +91,10 @@ def text_to_image(text: str, output_path: str) -> str | None:
     wrap_width = 45 
     original_lines = textwrap.wrap(original_sent_text, width=wrap_width)
     corrected_lines = textwrap.wrap(corrected_sent_text, width=wrap_width) if has_correction else []
-    tip_lines = textwrap.wrap(tip_text, width=wrap_width) if tip_text else []
-    response_lines = textwrap.wrap(response_text, width=wrap_width) if response_text else []
+    tip_lines = textwrap.wrap(tip_text, width=wrap_width) if tip_text else []    
 
     line_height = font_regular.getbbox("A")[3] + 15
-    bottom_box_height = (len(original_lines) + len(corrected_lines) + len(tip_lines) + len(response_lines) + 6) * line_height + 2 * PADDING # +6 para etiquetas y espacios
+    bottom_box_height = (len(original_lines) + len(corrected_lines) + len(tip_lines) + 5) * line_height + 2 * PADDING # +5 para etiquetas y espacios
     
     bottom_img = Image.new('RGBA', (WIDTH, bottom_box_height), (0, 0, 0, 0))
     bottom_draw = ImageDraw.Draw(bottom_img)
@@ -202,15 +163,6 @@ def text_to_image(text: str, output_path: str) -> str | None:
         y += PADDING // 2
         bottom_draw.line([(PADDING, y), (WIDTH - PADDING, y)], fill="#D8DEE9", width=1)
         y += PADDING // 2
-
-    # --- Sección Respuesta ---
-    if response_lines:
-        bottom_draw.text((PADDING, y), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
-
-        y += line_height
-        for line in response_lines:
-            bottom_draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
-            y += line_height
 
     # --- Combinar ambas cajas en una imagen final ---
     # Usamos la altura precalculada de la caja inferior que ya incluye todos los espacios.
