@@ -200,31 +200,32 @@ def text_to_simple_image(text: str, output_path: str) -> str | None:
 
     try:
         # Intentar usar fuentes comunes en Linux
-        font_regular = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size=16)
+        font_regular = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size=20)
     except IOError:
         try:
             # Si falla, intentar con fuentes de Windows
-            font_regular = ImageFont.truetype("arial.ttf", size=16)
+            font_regular = ImageFont.truetype("arial.ttf", size=20)
         except IOError:
             # Como último recurso, usar la fuente por defecto
             font_regular = ImageFont.load_default()
 
-    response_lines = textwrap.wrap(text, width=45)
+    # Usamos un ancho menor para que el bloque de texto sea más angosto y centrado.
+    response_lines = textwrap.wrap(text, width=40)
     
     line_height = font_regular.getbbox("A")[3] + 15
     # Altura para las líneas de la respuesta + padding superior e inferior.
     total_height = (len(response_lines) * line_height) + (2 * PADDING)
     
-    final_img = Image.new('RGBA', (WIDTH, total_height), BG_COLOR)
+    final_img = Image.new('RGB', (WIDTH, total_height), BG_COLOR)
     draw = ImageDraw.Draw(final_img)
     
-    y = PADDING
+    # Centramos el bloque de texto verticalmente
+    text_block_height = (len(response_lines) * line_height) - (line_height - font_regular.getbbox("A")[3])
+    y = (total_height - text_block_height) / 2
     for line in response_lines:
-        # Calculamos el ancho de la línea actual para centrarla
-        line_width = draw.textlength(line, font=font_regular)
-        x = (WIDTH - line_width) / 2
-        draw.text((x, y), line, font=font_regular, fill=TEXT_COLOR)
+        # Dibujamos el texto alineado a la izquierda con un padding generoso
+        draw.text((PADDING * 2, y), line, font=font_regular, fill=TEXT_COLOR)
         y += line_height
     
-    final_img.convert('RGB').save(output_path)
+    final_img.save(output_path)
     return output_path
