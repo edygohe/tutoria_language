@@ -91,20 +91,12 @@ def text_to_image(text: str, output_path: str) -> str | None:
     wrap_width = 45 
     original_lines = textwrap.wrap(original_sent_text, width=wrap_width)
     corrected_lines = textwrap.wrap(corrected_sent_text, width=wrap_width) if has_correction else []
-    tip_lines = textwrap.wrap(tip_text, width=wrap_width) if tip_text else []    
-
-    # Calcular dinámicamente el número de líneas extra para etiquetas y espaciadores
-    # para evitar el espacio en blanco excesivo.
-    extra_lines_count = 2  # Siempre tenemos "Frase Original:" y el espacio después.
-    if has_correction:
-        extra_lines_count += 2  # Para la etiqueta "Corregido:" y su espaciador.
-    if tip_lines:
-        extra_lines_count += 1  # Para la etiqueta "Tip:".
-
+    tip_lines = textwrap.wrap(tip_text, width=wrap_width) if tip_text else []
     line_height = font_regular.getbbox("A")[3] + 15
-    bottom_box_height = (len(original_lines) + len(corrected_lines) + len(tip_lines) + extra_lines_count) * line_height + 2 * PADDING
-    
-    bottom_img = Image.new('RGBA', (WIDTH, bottom_box_height), (0, 0, 0, 0))
+
+    # Dibujamos en un lienzo temporal muy alto para medir el contenido real.
+    temp_height = 2000
+    bottom_img = Image.new('RGBA', (WIDTH, temp_height), (0, 0, 0, 0))
     bottom_draw = ImageDraw.Draw(bottom_img)
     bottom_draw.rounded_rectangle(((0, 0), (WIDTH, bottom_box_height)), radius=CORNER_RADIUS, fill=BOTTOM_BOX_BG)
 
@@ -171,6 +163,12 @@ def text_to_image(text: str, output_path: str) -> str | None:
         y += PADDING // 2
         bottom_draw.line([(PADDING, y), (WIDTH - PADDING, y)], fill="#D8DEE9", width=1)
         y += PADDING // 2
+    
+    # --- Recortar la imagen a su altura real ---
+    # La altura final es la última posición 'y' más el padding inferior.
+    final_bottom_height = y + PADDING
+    bottom_img = bottom_img.crop((0, 0, WIDTH, final_bottom_height))
+    bottom_box_height = final_bottom_height
 
     # --- Combinar ambas cajas en una imagen final ---
     # Usamos la altura precalculada de la caja inferior que ya incluye todos los espacios.
