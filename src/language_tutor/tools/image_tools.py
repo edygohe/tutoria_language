@@ -220,7 +220,10 @@ def text_to_simple_image(text: str, output_path: str) -> str | None:
     
     y = PADDING
     for line in response_lines:
-        draw.text((PADDING, y), line, font=font_regular, fill=TEXT_COLOR) # Corregido: 'font=' es explícito
+        # Calculamos el ancho de la línea actual para centrarla
+        line_width = draw.textlength(line, font=font_regular)
+        x = (WIDTH - line_width) / 2
+        draw.text((x, y), line, font=font_regular, fill=TEXT_COLOR)
         y += line_height
     
     final_img.convert('RGB').save(output_path)
