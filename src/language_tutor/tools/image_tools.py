@@ -212,7 +212,7 @@ def text_to_simple_image(text: str, output_path: str) -> str | None:
     
     y = PADDING
     for line in response_lines:
-        draw.text((PADDING, y), line, font_regular, fill=TEXT_COLOR) # Aseguramos que la fuente sea regular
+        draw.text((PADDING, y), line, font=font_regular, fill=TEXT_COLOR) # Corregido: 'font=' es explícito
         y += line_height
     
     final_img.convert('RGB').save(output_path)
