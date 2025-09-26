@@ -58,53 +58,57 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     await update.message.reply_text("No se pudo generar el feedback.")
                     return
 
-                # Si hay correcciones (la palabra "Corregido" está en el texto), enviamos el feedback completo.
-                # Si no, nos saltamos esta parte y vamos directo a la conversación.
+                # --- PASO 2: Decidir el flujo basado en si hay errores ---
                 if "Corregido:" in feedback_text:
+                    # --- Flujo con errores: Feedback + Conversación ---
                     logger.info("Se encontraron errores, enviando feedback detallado.")
-                    # Enviar la imagen de feedback
+                    # 2a. Enviar la imagen de feedback
                     image_response = await client.post(IMAGE_API_URL, json={"text": feedback_text})
                     if image_response.status_code == 200:
                         await update.message.reply_photo(photo=image_response.content)
                     else:
                         await update.message.reply_text(f"Error al generar imagen: {image_response.text}")
 
-                    # Enviar el audio del feedback
+                    # 2b. Enviar el audio del feedback
                     tts_response = await client.post(TTS_API_URL, json={"text": feedback_text})
                     if tts_response.status_code == 200:
                         await update.message.reply_voice(voice=tts_response.content)
                     else:
                         await update.message.reply_text(f"Error al generar audio: {tts_response.text}")
+                else:
+                    # --- Flujo sin errores: Solo conversación ---
+                    logger.info("No se encontraron errores, continuando la conversación.")
 
             else:
                 await update.message.reply_text(f"Error al obtener feedback: {feedback_response.text}")
                 return
 
-            # --- PASO 2: Obtener la respuesta conversacional ---
+            # --- PASO 3: Obtener y enviar la respuesta conversacional (siempre se ejecuta) ---
             # Reutilizamos el archivo de audio para una segunda llamada
             files_for_conversation = {'file': ('voice_message.ogg', io.BytesIO(voice_bytearray), 'audio/ogg')}
             logger.info(f"Solicitando continuación de la conversación a la API...")
             conversation_response = await client.post(AGENT_API_URL, data={"team_name": "direct_conversation_team"}, files=files_for_conversation)
 
             if conversation_response.status_code == 200:
-                conversation_text = conversation_response.json().get("response")
+                conversation_text = conversation_response.json().get("response", "")
                 if not conversation_text:
                     logger.warning("No se generó respuesta conversacional.")
                     return
 
-                # Generar y enviar la imagen de la respuesta conversacional
+                # 3a. Generar y enviar la imagen de la respuesta conversacional
                 simple_image_response = await client.post(SIMPLE_IMAGE_API_URL, json={"text": conversation_text})
                 if simple_image_response.status_code == 200:
                     await update.message.reply_photo(photo=simple_image_response.content)
                 else:
                     await update.message.reply_text(f"Error al generar imagen de respuesta: {simple_image_response.text}")
 
-                # Generar y enviar el audio de la respuesta conversacional
+                # 3b. Generar y enviar el audio de la respuesta conversacional
                 tts_response_conv = await client.post(TTS_API_URL, json={"text": conversation_text})
                 if tts_response_conv.status_code == 200:
                     await update.message.reply_voice(voice=tts_response_conv.content)
                 else:
                     await update.message.reply_text(f"Error al generar audio de respuesta: {tts_response_conv.text}")
+
             else:
                 await update.message.reply_text(f"Error al continuar la conversación: {conversation_response.text}")
 
