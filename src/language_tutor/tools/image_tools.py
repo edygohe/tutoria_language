@@ -23,7 +23,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
     BOTTOM_BOX_BG = "#FFFFFF"
     FEEDBACK_TEXT_COLOR = "#EBCB8B"  # Amarillo (Nord)
     PERCENTAGE_TEXT_COLOR = "#A3BE8C"  # Verde (Nord)
-    TIP_BG_COLOR = "#E5F9E0" # Un verde claro y suave
+    RESPONSE_ONLY_BG_COLOR = "#FFFBEA" # Un amarillo muy claro
     CORRECTED_TEXT_COLOR = "#000000"
     INCORRECT_WORD_BG = "#F34A07"  # Rojo (Nord)
     INCORRECT_WORD_TEXT = "#FFFFFF"
@@ -53,6 +53,31 @@ def text_to_image(text: str, output_path: str) -> str | None:
     # La sección 'Corregido' es ahora opcional.
     # Si no hay errores, no existirá.
     has_correction = corrected_sent is not None
+
+    # --- Caso especial: Solo hay respuesta (frase 100% correcta) ---
+    if not has_correction and not tip_line and response_line:
+        response_text = (response_line.group(1) if response_line else "").replace('\\n', '\n')
+        response_lines = textwrap.wrap(response_text, width=45)
+        
+        line_height = font_regular.getbbox("A")[3] + 15
+        # Altura para el título "Feedback", la etiqueta "Respuesta" y las líneas de la respuesta.
+        total_height = 80 + (len(response_lines) + 1) * line_height + 2 * PADDING
+        
+        final_img = Image.new('RGBA', (WIDTH, total_height), RESPONSE_ONLY_BG_COLOR)
+        draw = ImageDraw.Draw(final_img)
+
+        # Dibujar título "Feedback"
+        draw.text((PADDING, PADDING), "Feedback", font=font_bold, fill=CORRECTED_TEXT_COLOR)
+        # Dibujar etiqueta "Respuesta"
+        draw.text((PADDING, PADDING + 60), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
+        
+        y = PADDING + 60 + line_height
+        for line in response_lines:
+            draw.text((PADDING, y), line, font=font_regular, fill=CORRECTED_TEXT_COLOR)
+            y += line_height
+        
+        final_img.save(output_path)
+        return output_path
 
     original_sent_text = original_sent.group(1) if original_sent else ""
     corrected_sent_text = corrected_sent.group(1) if has_correction else ""
@@ -154,8 +179,8 @@ def text_to_image(text: str, output_path: str) -> str | None:
     # --- Sección Consejo (Tip) ---
     if tip_lines:
         tip_start_y = y
-        tip_section_height = (len(tip_lines) + 1) * line_height # +1 para la etiqueta "Tip:"
-        bottom_draw.rectangle([(0, tip_start_y - 15), (WIDTH, tip_start_y + tip_section_height)], fill=TIP_BG_COLOR)
+        tip_section_height = (len(tip_lines) + 1) * line_height  # +1 para la etiqueta "Tip:"
+        bottom_draw.rectangle([(0, tip_start_y - 15), (WIDTH, tip_start_y + tip_section_height)], fill=RESPONSE_ONLY_BG_COLOR) # Reutilizamos el color amarillo
         bottom_draw.text((PADDING, y), "Tip:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
         y += line_height
         for line in tip_lines:
@@ -169,14 +194,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
 
     # --- Sección Respuesta ---
     if response_lines:
-        # Si no hubo corrección ni tip, la respuesta es la sección principal.
-        if not has_correction and not tip_lines:
-            y -= PADDING // 2 # Retrocedemos para sobreescribir la línea divisoria
-            y -= PADDING // 2
-            bottom_draw.text((PADDING, y), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
-        # Si hubo corrección, la respuesta va después del tip.
-        else:
-            bottom_draw.text((PADDING, y), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
+        bottom_draw.text((PADDING, y), "Respuesta:", font=font_bold, fill=CORRECTED_TEXT_COLOR)
 
         y += line_height
         for line in response_lines:

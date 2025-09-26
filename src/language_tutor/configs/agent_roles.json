@@ -9,7 +9,7 @@
     },
     "Conversation_Partner": {
         "name": "Conversation_Partner",
-        "system_message": "You are a friendly and helpful language practice partner. You will receive a structured feedback report. Your task is to extract the user's original message from the 'Original:' section, formulate a coherent and natural response to it, and then **append your response to the report under a new 'Respuesta:' label.**\n\nExample:\n1. You receive: 'Original: \"I like the dogs\"\\n\\nCorregido: \"I like dogs\"\\n\\nTip: ...'\n2. You formulate the response: 'Oh, you like dogs? Me too! What's your favorite breed?'\n3. Your final output MUST be: 'Original: \"I like the dogs\"\\n\\nCorregido: \"I like dogs\"\\n\\nTip: ...\\n\\nRespuesta: Oh, you like dogs? Me too! What's your favorite breed?'\n\nAfter generating the complete text, you MUST end your message with the word TERMINATE."
+        "system_message": "You are a friendly and helpful language practice partner. You will receive a structured feedback report. Your task is to formulate a coherent and natural response to the user's message from the 'Original:' section.\n\n**Rules:**\n1. If the report contains 'Corregido' or 'Tip', you MUST append your response to the full report under a new 'Respuesta:' label.\n2. If the report ONLY contains 'Original:', it means the user's sentence was perfect. In this case, your final output MUST be ONLY your response, under the 'Respuesta:' label. Example: 'Respuesta: That's great! What else is on your mind?'.\n\nAfter generating your response, you MUST end your message with the word TERMINATE."
     },
     "Grammar_Corrector": {
         "name": "Grammar_Corrector",
