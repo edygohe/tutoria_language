@@ -46,7 +46,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
     # 1. Parsear el texto del agente
     original_sent = re.search(r'Original:\s*"(.*?)"', text, re.DOTALL)
     corrected_sent = re.search(r'Corregido:\s*"(.*?)"', text, re.DOTALL)
-    feedback_line = re.search(r'Feedback:\s*(.*)', text)
+    # La línea de feedback ahora es estática, no necesitamos parsearla.
     tip_line = re.search(r'Tip:\s*(.*)', text, re.DOTALL)
 
     # La sección 'Corregido' es ahora opcional.
@@ -55,27 +55,7 @@ def text_to_image(text: str, output_path: str) -> str | None:
 
     original_sent_text = original_sent.group(1) if original_sent else ""
     corrected_sent_text = corrected_sent.group(1) if has_correction else ""
-    feedback_text = feedback_line.group(1) if feedback_line else ""
     tip_text = (tip_line.group(1) if tip_line else "").replace('\\n', '\n')
-
-    # Comparamos el texto original y el corregido para determinar si son idénticos
-    # y calcular el porcentaje de acierto de forma fiable.
-    original_words = original_sent_text.split()
-    corrected_words = corrected_sent_text.split()
-    total_words = len(original_words)
-    
-    # Comparamos ignorando mayúsculas/minúsculas y espacios extra
-    are_identical = original_sent_text.strip().lower() == corrected_sent_text.strip().lower() or not has_correction
-
-    if are_identical:
-        feedback_text = "¡Perfecto! Tu frase es 100% correcta."
-        has_correction = False # Esto evitará que se dibuje la sección "Corregido"
-    else:
-        # Calculamos el porcentaje solo si hay errores
-        diff = ndiff(original_words, corrected_words)
-        correct_words = len([item for item in diff if item.startswith(' ')])
-        percentage = (correct_words / total_words) * 100 if total_words > 0 else 0
-        feedback_text = f"Has acertado en un {percentage:.0f}%"
 
     # --- Dibujar la caja superior (Feedback) ---
     top_box_height = 80
@@ -83,10 +63,9 @@ def text_to_image(text: str, output_path: str) -> str | None:
     top_draw = ImageDraw.Draw(top_img)
     top_draw.rounded_rectangle(((0, 0), (WIDTH, top_box_height)), radius=CORNER_RADIUS, fill=TOP_BOX_BG)
     
-    feedback_label = "Feedback: "
-    top_draw.text((PADDING, (top_box_height - font_bold.getbbox(feedback_label)[3]) / 2), feedback_label, font=font_bold, fill=FEEDBACK_TEXT_COLOR)
-    feedback_x_pos = PADDING + top_draw.textlength(feedback_label, font=font_bold)
-    top_draw.text((feedback_x_pos, (top_box_height - font_regular.getbbox(feedback_text)[3]) / 2), feedback_text, font=font_regular, fill=PERCENTAGE_TEXT_COLOR)
+    feedback_label = "Feedback"
+    label_width = top_draw.textlength(feedback_label, font=font_bold)
+    top_draw.text(((WIDTH - label_width) / 2, (top_box_height - font_bold.getbbox(feedback_label)[3]) / 2), feedback_label, font=font_bold, fill=FEEDBACK_TEXT_COLOR)
 
     # --- Dibujar la caja inferior (Corrección) ---
     words_to_draw = []
