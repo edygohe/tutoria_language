@@ -29,7 +29,7 @@ SIMPLE_IMAGE_API_URL = "http://127.0.0.1:8000/generate-simple-image/"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Maneja el comando /start."""
-    await update.message.reply_text("¡Hola! Soy tu tutor de idiomas. Envíame un mensaje de voz en inglés y te responderé.")
+    await update.message.reply_text("¡Hola! Soy tu tutor de idiomas, puedes llamarme Tutoria. Envíame un mensaje de voz en inglés para practicar.")
 
 
 async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
